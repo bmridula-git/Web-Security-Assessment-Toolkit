@@ -3,7 +3,6 @@
 // Web Security Assessment Toolkit
 // Portfolio Edition
 
-// ---------- Helpers ----------
 function ensure_scheme($url) {
     if (stripos($url, 'http') !== 0) return 'https://' . $url;
     return $url;
@@ -87,7 +86,6 @@ function get_domain_ip($domain) {
     return $ip ? $ip : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
 }
 
-// ---------- DNSBL & Spamhaus checks (IP-based) ----------
 function dnsbl_and_spamhaus_check($domain) {
     $d = preg_replace('#https?://#i', '', $domain);
     $d = preg_replace('#/.*#', '', $d);
@@ -97,7 +95,7 @@ function dnsbl_and_spamhaus_check($domain) {
     }
 
     $rev = implode('.', array_reverse(explode('.', $ip)));
-    // DNSBL servers to check (only what you requested; Spamhaus included)
+  
     $dnsbls = [
         "zen.spamhaus.org",
         "bl.spamcop.net",
@@ -111,14 +109,12 @@ function dnsbl_and_spamhaus_check($domain) {
         if (@checkdnsrr($q, 'A')) $listed[] = $dnsbl;
     }
 
-    // Spamhaus specific (zen.spamhaus.org)
     $spamhaus_q = $rev . '.zen.spamhaus.org.';
     $spamhaus_listed = @checkdnsrr($spamhaus_q, 'A');
 
     return ['ip' => $ip, 'dnsbl_listed' => $listed, 'spamhaus_listed' => $spamhaus_listed];
 }
 
-// ---------- Form handling ----------
 $target = '';
 $report = null;
 $error = '';
@@ -136,10 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['target'])) {
             $report = parse_security_headers($headers);
             $ip = get_domain_ip($target);
 
-            // DNSBL & Spamhaus
             $dnsbl_result = dnsbl_and_spamhaus_check($target);
 
-            // Phase2 checks:
             $uploads = check_upload_dirs($target);
             $phase2[] = [
                 'check' => 'File Upload Directory Exposure',
@@ -173,7 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['target'])) {
             foreach($cookies as $c) if (stripos($c,'phpsessid')!==false || stripos($c,'session')!==false) $sessionCookie = true;
             $phase2[] = ['check'=>'Authentication / Session Indicators','value'=>!empty($logins)?implode(', ',array_keys($logins)):'Not Provided by Server','rec'=>$sessionCookie?'Session cookies present. Ensure secure flags':'No session cookies detected','status'=>$sessionCookie?'warn':'pass'];
 
-            // Append DNSBL row to phase2
             $phase2[] = [
                 'check' => 'DNSBL / RBL Blacklist Status',
                 'value' => !empty($dnsbl_result['dnsbl_listed']) ? implode(', ', $dnsbl_result['dnsbl_listed']) : 'Not listed on major DNSBL',
@@ -181,7 +174,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['target'])) {
                 'status'=> !empty($dnsbl_result['dnsbl_listed']) ? 'warn' : 'pass'
             ];
 
-            // Append Spamhaus-specific row
             $phase2[] = [
                 'check' => 'Spamhaus (zen.spamhaus.org)',
                 'value' => $dnsbl_result['spamhaus_listed'] ? 'Listed' : 'Not Listed',
@@ -192,7 +184,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['target'])) {
     }
 }
 
-// ---------- CSV Download (same file) ----------
 if (isset($_GET['download']) && $_GET['download'] === 'csv' && isset($_GET['target'])) {
     $t = $_GET['target'];
     header('Content-Type: text/csv');
@@ -200,24 +191,19 @@ if (isset($_GET['download']) && $_GET['download'] === 'csv' && isset($_GET['targ
     header('Content-Disposition: attachment; filename="web_security_assessment_'.$safeFile.'.csv"');
     $out = fopen('php://output','w');
 
-    // CSV header
     fputcsv($out, ['Category','Item','Value','Recommendation / Status']);
 
-    // Re-fetch headers for CSV accuracy
     $headers_csv = get_headers_safe($t);
     $report_csv = $headers_csv ? parse_security_headers($headers_csv) : null;
 
     if ($report_csv) {
-        // Security headers
         foreach($report_csv['all_headers'] as $k=>$v) {
             fputcsv($out, ['Security Header', $k, $v ? $v : 'Not Provided by Server', '']);
         }
 
-        // Phase2 checks recomputed for CSV
         $uploads_csv = check_upload_dirs($t);
         $cookies_csv = get_set_cookie_flags($headers_csv);
 
-        // CSRF / cookie
         if (empty($cookies_csv)) {
             fputcsv($out, ['Phase2','CSRF / Cookie Flags','Not Provided by Server','No session cookies detected']);
         } else {
@@ -233,27 +219,21 @@ if (isset($_GET['download']) && $_GET['download'] === 'csv' && isset($_GET['targ
             fputcsv($out,['Phase2','CSRF / Cookie Flags',implode('; ',$flagSummary),!empty($flagIssues)?implode('; ',$flagIssues):'Cookie flags look good']);
         }
 
-        // Uploads
         fputcsv($out,['Phase2','File Upload Directory Exposure', !empty($uploads_csv)?implode(', ',array_keys($uploads_csv)):'Not Provided by Server', !empty($uploads_csv)?'Potential upload dirs accessible':'No common upload path detected']);
 
-        // Sensitive dirs
         $sdirs_csv = check_sensitive_dirs($t);
         fputcsv($out,['Phase2','Sensitive Directory Exposure', !empty($sdirs_csv)?implode(', ',array_keys($sdirs_csv)):'Not Provided by Server', !empty($sdirs_csv)?'Sensitive dirs found':'No sensitive dirs detected']);
 
-        // Login pages
         $logins_csv = check_login_pages($t);
         fputcsv($out,['Phase2','Authentication / Session Indicators', !empty($logins_csv)?implode(', ',array_keys($logins_csv)):'Not Provided by Server', '']);
 
-        // DNSBL & Spamhaus
         $dnsbl_csv = dnsbl_and_spamhaus_check($t);
         fputcsv($out,['Phase2','DNSBL / RBL IP', $dnsbl_csv['ip'] ? $dnsbl_csv['ip'] : '','']);
         fputcsv($out,['Phase2','DNSBL / RBL Listed', !empty($dnsbl_csv['dnsbl_listed'])?implode(', ',$dnsbl_csv['dnsbl_listed']):'Not listed on major DNSBL', !empty($dnsbl_csv['dnsbl_listed'])?'Listed':'Not Listed']);
         fputcsv($out,['Phase2','Spamhaus (zen.spamhaus.org)', $dnsbl_csv['spamhaus_listed'] ? 'Listed' : 'Not Listed', $dnsbl_csv['spamhaus_listed'] ? 'Listed' : 'Not Listed']);
 
-        // IP
         fputcsv($out,['Network','IP Address', get_domain_ip($t), '']);
 
-        // Also include the website entered
         fputcsv($out, ['Meta','Entered Website', $t, '']);
     }
 
@@ -271,7 +251,6 @@ if (isset($_GET['download']) && $_GET['download'] === 'csv' && isset($_GET['targ
 </head>
 <body>
 
-  <!-- HEADER -->
   <header class="site-header">
     <div class="header-inner">
       <div class="header-left">
@@ -284,20 +263,18 @@ if (isset($_GET['download']) && $_GET['download'] === 'csv' && isset($_GET['targ
     </div>
   </header>
 
-  <!-- MENU -->
   <nav class="menu-bar">
     <div class="menu-inner">
         <a href="toolkit.php" class="active">Toolkit</a>
     </div>
   </nav>
 
-  <!-- MAIN WRAPPER -->
   <main class="page-wrapper">
     <section class="card">
       <h3 style="color:#c62828;margin:0 0 8px 0;">Web Security Assessment Toolkit</h3>
       <p style="margin:0 0 14px 0;color:#444">Analyze website security headers, identify common web security misconfigurations, perform DNSBL reputation checks, and generate downloadable security assessment reports.</p>
 
-      <form class="analyze-form" method="post" action="toolkit.php">
+      <form class="Toolkit-form" method="post" action="toolkit.php">
         <input type="text" name="target" placeholder="example.com or https://example.com" value="<?php echo htmlentities($target); ?>" required>
         <button type="submit" class="btn-primary">Run Assessment</button>
         <?php if ($report): ?>

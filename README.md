@@ -34,7 +34,9 @@ Then open `http://localhost:8000/toolkit.php` and enter a domain or URL
 
 - This is a demonstration/portfolio project built to explore HTTP security 
   header analysis and basic web recon techniques.
-- Not intended for scanning targets you don't own or have permission to test.
+- All testing during development was performed against a domain I own — 
+  this tool is not intended for scanning targets you don't own or don't 
+  have explicit permission to test.
 - SSL certificate verification is disabled when fetching target headers, to 
   allow analysis of sites with self-signed or misconfigured certs — this is 
   fine for a local demo tool but shouldn't be replicated in production code.

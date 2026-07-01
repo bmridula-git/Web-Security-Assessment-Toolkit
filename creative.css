@@ -1,10 +1,8 @@
 /* ---------------------------
    Web Security Assessment Toolkit
-   Master Stylesheet
    Portfolio Edition
    --------------------------- */
 
-/* ====== Theme / variables ====== */
 :root{
   --primary-bg: #2f255c;
   --accent-color: #2f255c;
@@ -24,13 +22,11 @@
   --muted-text: #666;
 }
 
-/* ====== Page basics & transition ====== */
 html,body{
   height:100%;
   margin:0;
   padding:0;
 
-  /* 🔥 ARIAL FONT ENABLED HERE */
   font-family: Arial, Helvetica, sans-serif;
 
   background:var(--page-bg);
@@ -44,7 +40,6 @@ html,body{
   to{opacity:1; transform: translateY(0);}
 }
 
-/* ====== Header (full width) ====== */
 .site-header{
   width:100%;
   background:var(--primary-bg);
@@ -65,8 +60,6 @@ html,body{
   gap:10px;
 }
 
-/* left & right column classes for header */
-.header-left, .header-right {
   line-height:var(--line-spacing);
 }
 
@@ -94,7 +87,6 @@ html,body{
   margin:0;
 }
 
-/* ====== Menu bar ====== */
 .menu-bar {
   width:100%;
   background: #ffffff;
@@ -133,7 +125,6 @@ html,body{
   font-weight:600;
 }
 
-/* ====== Central page wrapper ====== */
 .page-wrapper {
   width:var(--container-width);
   margin: 36px auto;
@@ -148,7 +139,6 @@ html,body{
   box-sizing:border-box;
 }
 
-/* cards */
 .card {
   background:#fff;
   padding:22px 26px;
@@ -156,7 +146,6 @@ html,body{
   box-shadow: 0 10px 18px rgba(0,0,0,0.06);
 }
 
-/* headings */
 .h-title {
   color:var(--heading-blue);
   font-size:22px;
@@ -167,7 +156,6 @@ html,body{
   display:inline-block;
 }
 
-/* paragraph & list */
 p, li {
   color:var(--content-text);
   line-height:1.6;
@@ -175,22 +163,20 @@ p, li {
   font-size:15px;
 }
 
-/* highlights list */
 ol.highlights {
   padding-left:18px;
   color:var(--accent-color);
   margin-top:18px;
 }
 
-/* analyzer form */
-.analyze-form {
+.Toolkit-form {
   display:flex;
   gap:12px;
   align-items:center;
   width:100%;
 }
 
-.analyze-form input[type="text"] {
+.Toolkit-form input[type="text"] {
   width:70%;
   padding:10px 12px;
   border:1px solid #cfcfcf;
@@ -208,7 +194,6 @@ ol.highlights {
   font-size:14px;
 }
 
-/* ====== Tables ====== */
 .table {
   width:100%;
   border-collapse:collapse;
@@ -226,7 +211,6 @@ ol.highlights {
   font-weight:600;
 }
 
-/* CSV button */
 .csv-link {
   display:inline-block;
   margin-left:8px;
@@ -238,7 +222,6 @@ ol.highlights {
   font-size:14px;
 }
 
-/* ====== Footer ====== */
 .site-footer {
   width:100%;
   background:var(--primary-bg);
@@ -268,7 +251,6 @@ ol.highlights {
   font-weight:700;
 }
 
-/* ====== Responsive ====== */
 @media(max-width:900px){
   .header-inner, .menu-inner, .page-wrapper, .footer-inner { width:94%; }
   .menu-inner { justify-content:center; gap:12px; }
